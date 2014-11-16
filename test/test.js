@@ -4,6 +4,7 @@ var test = require('tape');
 var through = require('through');
 
 var createParseStream = require('../parser');
+var createKicadParser = require('../kicad-pcb');
 
 test('basic parse', function(t) {
   var st = through();
@@ -107,11 +108,11 @@ test('emit events', function(t) {
       t.equal(boards, 1, 'should have 1 board');
       t.end();
     })
-    .on('line', function(line) {
+    .on('op_line', function(line) {
       t.equal(line.length, 4);
       lines++;
     })
-    .on('board', function(board) {
+    .on('op_board', function(board) {
       t.equal(board.length, 2);
       boards++;
     });
@@ -120,3 +121,16 @@ test('emit events', function(t) {
       '(board (line 10 10 100 100) (line 1 1 2 2))'
     );
 });
+
+test('parse BLDC4 board', function(t) {
+
+  var parser = createKicadParser(true);
+  fs.createReadStream(path.join(__dirname, 'BLDC_4.kicad_pcb'))
+    .pipe(parser)
+    .on('end', function() {
+      t.end();
+    });
+
+
+
+})

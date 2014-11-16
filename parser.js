@@ -52,17 +52,16 @@ function createKiCadParserStream(debug) {
         addCurrentToken();
         var last = stack.pop();
 
-        debug && !this.listeners(last[0]).length && console.log('WARNING: unhandled event', last[0]);
+        if (this.listeners(last[0]).length) {
+          this.emit('op_' + last[0], last[1]);
+        } else {
+          this.emit('*', last);
+        }
 
-        this.emit(last[0], last[1]);
         loc = stack[stack.length-1];
 
-        debug && console.log('new loc', loc, stack);
-
         if (!stack.length) {
-          if (this.listeners('data').length) {
-            this.push(cmd);
-          }
+          this.push(cmd);
         }
       } else if (c === ' ' && !inQuotes) {
         addCurrentToken();
