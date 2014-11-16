@@ -30,8 +30,6 @@ function createKiCadParserStream(debug) {
     for (var i = 0; i<l; i++) {
       var c = str[i];
 
-      debug && console.log(c, loc, 'stack:', stack);
-
       if (c === '"') {
         inQuotes = !inQuotes;
         continue;
@@ -54,9 +52,9 @@ function createKiCadParserStream(debug) {
         addCurrentToken();
         var last = stack.pop();
 
-        debug && console.log('emit', last);
-        this.emit(last[0], last[1]);
+        debug && !this.listeners(last[0]).length && console.log('WARNING: unhandled event', last[0]);
 
+        this.emit(last[0], last[1]);
         loc = stack[stack.length-1];
 
         debug && console.log('new loc', loc, stack);
