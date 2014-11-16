@@ -3,22 +3,6 @@ var createParser = require('./parser');
 
 module.exports = createKiCadParserStream;
 
-function r3(args) {
-  args[0] = parseFloat(args[0]);
-  args[1] = parseFloat(args[1]);
-  args[2] = parseFloat(args[2]);
-}
-
-function r2(args) {
-  args[0] = parseFloat(args[0]);
-  args[1] = parseFloat(args[1]);
-  return args;
-}
-
-function r1(args) {
-  return parseFloat(args[0])
-}
-
 function i1(args) {
   return parseInt(args[0], 10);
 }
@@ -31,55 +15,77 @@ function bool(args) {
   return !!args[0];
 }
 
+function attemptFloat(num) {
+  var r = parseFloat(num);
+  if (!isNaN(r)) {
+    return r;
+  } else {
+    return num;
+  }
+}
+
+function float(args) {
+
+  for (var i=0; i<args.length; i++) {
+    args[i] = attemptFloat(args[i]);
+  }
+
+  if (args.length > 1) {
+    return args;
+  } else {
+    return args[0];
+  }
+}
+
 
 var ops = {
 
-  width: r1,
-  net: r1,
-  min_thickness: r1,
-  clearance: r1,
-  thermal_bridge_width: r1,
-  thermal_gap: r1,
-  thermal_width: r1,
-  thickness: r1,
-  angle: r1,
-  user_trace_width: r1,
+  width: float,
+  net: float,
+  min_thickness: float,
+  clearance: float,
+  thermal_bridge_width: float,
+  thermal_gap: float,
+  thermal_width: float,
+  thickness: float,
+  angle: float,
+  user_trace_width: float,
 
-  last_trace_width: r1,
-  trace_clearance: r1,
-  zone_clearance: r1,
-  trace_min: r1,
-  segment_width: r1,
-  edge_width: r1,
-  via_size: r1,
-  via_drill: r1,
-  via_min_size: r1,
-  via_min_drill: r1,
-  uvia_size: r1,
-  uvia_drill: r1,
-  uvias_allowed: r1,
-  uvia_min_size: r1,
-  uvia_min_drill: r1,
-  pcb_text_width: r1,
-  pcb_text_size: r1,
-  mod_edge_width: r1,
-  mod_text_size: r1,
-  mod_text_width: r1,
-  pad_drill: r1,
-  pad_to_mask_clearance: r1,
-  links : r1,
-  no_connects : r1,
-  thickness : r1,
-  drawings : r1,
-  tracks : r1,
-  zones : r1,
-  modules : r1,
-  nets : r1,
-  version: r1,
-  trace_width: r1,
-  via_dia: r1,
-  uvia_dia: r1,
-  linewidth: r1,
+  last_trace_width: float,
+  trace_clearance: float,
+  zone_clearance: float,
+  trace_min: float,
+  segment_width: float,
+  edge_width: float,
+  via_size: float,
+  via_drill: float,
+  via_min_size: float,
+  via_min_drill: float,
+  uvia_size: float,
+  uvia_drill: float,
+  uvias_allowed: float,
+  uvia_min_size: float,
+  uvia_min_drill: float,
+  pcb_text_width: float,
+  pcb_text_size: float,
+  mod_edge_width: float,
+  mod_text_size: float,
+  mod_text_width: float,
+  pad_drill: float,
+  pad_to_mask_clearance: float,
+  links : float,
+  no_connects : float,
+  thickness : float,
+  drawings : float,
+  tracks : float,
+  zones : float,
+  modules : float,
+  nets : float,
+  version: float,
+  trace_width: float,
+  via_dia: float,
+  uvia_dia: float,
+  linewidth: float,
 
   arc_segments: i1,
   status: i1,
@@ -96,18 +102,17 @@ var ops = {
   tstamp: hex,
   tedit: hex,
 
-  xy: r2,
-  at: r2,
-  start: r2,
-  end: r2,
-  size: r2,
-  center: r2,
-  drill: r2,
-  user_via: r2,
-  pad_size: r2,
-  aux_axis_origin: r2,
+  xy: float,
+  start: float,
+  end: float,
+  size: float,
+  center: float,
+  drill: float,
+  user_via: float,
+  pad_size: float,
+  aux_axis_origin: float,
 
-  xyz: r3,
+  xyz: float,
 
   layer : false,
   net_name : false,
@@ -182,9 +187,15 @@ var ops = {
     return args;
   },
 
-  area : function(args) {
-    return args.map(parseFloat);
-  }
+  at : function(args) {
+    if (isNaN(parseFloat(args[0]))) {
+      return args;
+    } else {
+      return float(args);
+    }
+  },
+
+  area : float
 }
 
 
@@ -196,7 +207,7 @@ function createKiCadParserStream(debug) {
 
   var parser = createParser(debug);
 
-  parser.on('*', function(ev) {
+  parser.on('*', function(ev, stack) {
     var op = ops[ev[0]];
     if (op) {
       parser.emit('op_' + ev[0], op(ev[1]));
